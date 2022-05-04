@@ -23,6 +23,9 @@ class GanttPlotter:
 
         self._job_color_dict = {}
 
+    def show_gantt(self):
+        plt.show()
+
     def add_resource(self, resource_name):
         self._resources.append(resource_name)
 
@@ -101,8 +104,11 @@ class GanttPlotter:
             )
             lower_yaxis = (resource_count + 1) * self._tickdistance
             gnt.broken_barh(
-                broken_bars, (lower_yaxis, self._barheight), facecolors=facecolors,
-                alpha=0.8, edgecolor='black'
+                broken_bars,
+                (lower_yaxis, self._barheight),
+                facecolors=facecolors,
+                alpha=0.8,
+                edgecolor="black",
             )
             resource_count = resource_count + 1
 
@@ -197,7 +203,11 @@ class GanttJob:
 
 if __name__ == "__main__":
     resources = ["Unit 1", "Unit 2", "Unit 3"]
-    task1 = GanttJob(40, 50, "Unit 1", "Job1")
+    start_time = 40
+    duration = 50
+    resource = "Unit 1"
+    job_name = "Job1"
+    task1 = GanttJob(start_time, duration, resource, job_name)
 
     task2 = GanttJob(110, 10, "Unit 2", "Job2")
     task3 = GanttJob(150, 10, "Unit 2", "Job1")
@@ -216,4 +226,4 @@ if __name__ == "__main__":
     my_plotter.add_job(new_task)
 
     my_plotter.generate_gantt("Great Gantt Generation")
-    plt.show()
+    my_plotter.show_gantt()
