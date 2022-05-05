@@ -57,8 +57,16 @@ class GanttPlotter:
 
         return xmaxlim
 
+    def _calc_num_colors_needed(self):
+        unique_job_names = self._get_unique_job_names()
+        return len(unique_job_names)
+
+    def _get_unique_job_names(self):
+        all_job_names = [job.name for job in self._jobs]
+        return list(dict.fromkeys(all_job_names))
+
     def _generate_colors(self):
-        num_colors = len(self._jobs)
+        num_colors = self._calc_num_colors_needed()
         colors = []
         for i in range(0, num_colors):
             hue = math.fmod(i * 0.618033988749895, 1.0)
@@ -107,21 +115,36 @@ class GanttPlotter:
                 broken_bars,
                 (lower_yaxis, self._barheight),
                 facecolors=facecolors,
-                alpha=0.8,
+                alpha=0.9,
                 edgecolor="black",
             )
             resource_count = resource_count + 1
 
         self._add_footnote(gnt)
 
-        legend_labels = [job_name for job_name in self._job_color_dict.keys()]
-        plt.legend(legend_labels, bbox_to_anchor=(1.04, 0.6), loc="upper left")
+        # legend_labels = [job_name for job_name in self._job_color_dict.keys()]
+
+        from matplotlib.patches import Patch
+
+        legend_elements = []
+        for jobname in self._get_unique_job_names():
+            element_color = self._get_color_for(jobname)
+            element_label = jobname
+
+            new_element = Patch(facecolor=element_color,
+                                edgecolor='black',
+                                linewidth=0.5,
+                                label=element_label)
+            legend_elements.append(new_element)
+
+        # plt.legend(["Test1", "Test2"], legend_labels, bbox_to_anchor=(1.04, 0.6), loc="upper left")
+        plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 0.5), loc="center left")
 
         fig.tight_layout()
         if save_to_disk:
             now = datetime.now()
             dt_string = now.strftime("%d-%m-%Y--%H-%M-%S")
-            plt.savefig(f"{dt_string}--Gantt-{title.replace(' ','_')}.png")
+            plt.savefig(f"{dt_string}--Gantt-{title.replace(' ', '_')}.png")
         return fig
 
     def _generate_bars_for_resource(self, resource, job_list):
@@ -189,8 +212,10 @@ class GanttPlotter:
 
     def _generate_color_dict(self):
         colors = self._generate_colors()
-        for count, job in enumerate(self._jobs):
-            self._job_color_dict[job.name] = colors[count]
+
+        unique_job_names = set([job.name for job in self._jobs])
+        for count, job in enumerate(unique_job_names):
+            self._job_color_dict[job] = colors[count]
 
 
 class GanttJob:
