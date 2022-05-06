@@ -66,17 +66,19 @@ class GanttPlotter:
         return list(dict.fromkeys(all_job_names))
 
     def _generate_colors(self):
+        """https://gamedev.stackexchange.com/questions/46463/how-can-i-find-an-optimum-set-of-colors-for-10-players/46469#46469"""
         num_colors = self._calc_num_colors_needed()
         colors = []
+        golden_ratio_minus_one = 0.618033988749895
         for i in range(0, num_colors):
-            hue = math.fmod(i * 0.618033988749895, 1.0)
+            hue = math.fmod(i * golden_ratio_minus_one, 1.0)
             saturation = 0.5
-            value = math.sqrt(1.0 - math.fmod(i * 0.618033988749895, 0.5))
+            value = math.sqrt(1.0 - math.fmod(i * golden_ratio_minus_one, 0.5))
             next_color = hsv_to_rgb([hue, saturation, value])
             colors.append(next_color)
         return colors
 
-    def generate_gantt(self, title="", save_to_disk=False):
+    def generate_gantt(self, title="",description="", save_to_disk=False):
 
         fig, gnt = plt.subplots()
         yticks, yticklabels = self._find_yticks()
@@ -139,6 +141,18 @@ class GanttPlotter:
 
         # plt.legend(["Test1", "Test2"], legend_labels, bbox_to_anchor=(1.04, 0.6), loc="upper left")
         plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 0.5), loc="center left")
+
+        if description:
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            gnt.text(0.5, -0.25, description,
+                     transform=gnt.transAxes,
+                     fontsize=14,
+                     verticalalignment='top',
+                     bbox=props,
+                     ha="center"
+                     )
+
+
 
         fig.tight_layout()
         if save_to_disk:
