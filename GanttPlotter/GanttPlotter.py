@@ -69,11 +69,11 @@ class GanttPlotter:
         """https://gamedev.stackexchange.com/questions/46463/how-can-i-find-an-optimum-set-of-colors-for-10-players/46469#46469"""
         num_colors = self._calc_num_colors_needed()
         colors = []
-        golden_ratio_minus_one = 0.618033988749895
+        golden_ratio =  (1 + 5 ** 0.5) / 2
         for i in range(0, num_colors):
-            hue = math.fmod(i * golden_ratio_minus_one, 1.0)
+            hue = math.fmod(i * 1/golden_ratio, 1.0)
             saturation = 0.5
-            value = math.sqrt(1.0 - math.fmod(i * golden_ratio_minus_one, 0.5))
+            value = math.sqrt(1.0 - math.fmod(i * 1/golden_ratio, 0.5))
             next_color = hsv_to_rgb([hue, saturation, value])
             colors.append(next_color)
         return colors
