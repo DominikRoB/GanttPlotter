@@ -43,8 +43,20 @@ class GanttPlotter:
 
         return yticks, yticklabels
 
+    def _get_bar_height(self, resource):
+        #  return (resource_count + 1) * self._tickdistance  # OLD
+        yticks, yticklabels = self._find_yticks()
+        origin_offset = 5
+        index = yticklabels.index(resource)
+        return yticks[index] - origin_offset
+
     def _find_ymaxlim(self):
-        return 10 * (len(self._resources) + 2)
+        margin = 2
+        height_per_resource = 10
+        needed_height = height_per_resource * (len(self._resources) + margin)
+        lower_limit = margin*height_per_resource
+        ymaxlim = max(lower_limit, needed_height)
+        return ymaxlim
 
     def _find_xmaxlim(self):
         last_endtime = 0
@@ -53,7 +65,8 @@ class GanttPlotter:
             if end_time > last_endtime:
                 last_endtime = end_time
 
-        xmaxlim = last_endtime
+        lower_limit = 1
+        xmaxlim = max(lower_limit, last_endtime)
 
         return xmaxlim
 
@@ -112,7 +125,7 @@ class GanttPlotter:
             broken_bars, facecolors = self._generate_bars_for_resource(
                 resource, job_list
             )
-            lower_yaxis = (resource_count + 1) * self._tickdistance
+            lower_yaxis = self._get_bar_height(resource)
             gnt.broken_barh(
                 broken_bars,
                 (lower_yaxis, self._barheight),
@@ -139,8 +152,10 @@ class GanttPlotter:
                                 label=element_label)
             legend_elements.append(new_element)
 
+        max_elements_per_column = 20
+        legend_columns = math.floor(len(legend_elements) / max_elements_per_column)+1
         # plt.legend(["Test1", "Test2"], legend_labels, bbox_to_anchor=(1.04, 0.6), loc="upper left")
-        plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 0.5), loc="center left")
+        plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 0.5), loc="center left", ncol=legend_columns)
 
         if description:
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
