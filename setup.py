@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="GanttPlotter",
     packages=["GanttPlotter"],
-    version="0.0.1",
+    version="0.0.3",
     install_requires=[
         "matplotlib==3.5.1",
     ],
