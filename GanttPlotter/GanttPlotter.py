@@ -256,17 +256,56 @@ class GanttPlotter:
         return list(dict.fromkeys(all_job_names))
 
     def _generate_colors(self):
-        """https://gamedev.stackexchange.com/questions/46463/how-can-i-find-an-optimum-set-of-colors-for-10-players/46469#46469"""
-        num_colors = self._calc_num_colors_needed()
-        colors = []
-        golden_ratio = (1 + 5**0.5) / 2
-        for i in range(0, num_colors):
-            hue = math.fmod(i * 1 / golden_ratio, 1.0)
-            saturation = 0.5
-            value = math.sqrt(1.0 - math.fmod(i * 1 / golden_ratio, 0.5))
+        """
+        Generates an optimal set of distinct colors.
 
-            next_color = hsv_to_rgb([hue, saturation, value])
-            colors.append(next_color)
+        This method generates distinct colors for the jobs in the Gantt chart by leveraging the
+        properties of the golden ratio. The golden ratio is a special mathematical constant
+        (approximately 1.618) that has many interesting properties, one of which is that if
+        you take any two successive (one after the other) numbers in the sequence, their ratio is
+        very close to the golden ratio.
+
+        In the context of color generation, this property of the golden ratio is exploited to
+        generate colors that are as distinguishable as possible from each other. This is done by
+        creating colors in the HSV color space (which is more intuitive for humans to reason about)
+        and converting these to the RGB color space, which is more common in computer graphics.
+
+        The 'Hue' in HSV color space is calculated as the modulus of the multiplication of the
+        index of the color and the reciprocal of the golden ratio, ensuring that the hue is evenly
+        distributed around the color wheel and varies as much as possible from one color to the next.
+        The 'Saturation' is kept constant at 0.5 to ensure the colors are neither too pale nor too vibrant.
+        The 'Value' is calculated using a formula that results in a gradual decrease as the index increases,
+        providing another dimension of variability to the colors.
+
+        The method is adapted from the following StackExchange post:
+        https://gamedev.stackexchange.com/questions/46463/how-can-i-find-an-optimum-set-of-colors-for-10-players/46469#46469
+
+        Returns
+        -------
+        list
+            A list of RGB tuples, each representing a unique color.
+
+        Notes
+        -----
+        The number of colors generated is based on the number of unique jobs.
+        """
+
+        num_colors = self._calc_num_colors_needed()
+        golden_ratio = (1 + 5**0.5) / 2
+
+        colors = [
+            hsv_to_rgb(
+                [
+                    math.fmod(i * 1 / golden_ratio, 1.0),  # Hue
+                    0.5,  # Saturation
+                    math.sqrt(
+                        1.0 - math.fmod(i * 1 / golden_ratio, 0.5)
+                    ),  # Value, aka "Brightness"/"Intensity"
+                ]
+            )
+            for i in range(0, num_colors)
+        ]
+
         return colors
 
     def _create_legend(self, color_mode: int, max_elements_per_column: int) -> Any:
