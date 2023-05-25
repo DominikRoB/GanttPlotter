@@ -1,8 +1,8 @@
 # author          :Dominik Bleidorn (INOSIM)
 # date            :2023-05-25
 # python_version  :3.9
-# version         :0.2
-
+# version         :0.3
+import json
 import math
 import numpy as np
 import os
@@ -58,12 +58,12 @@ class GanttJob:
     """
 
     def __init__(
-        self,
-        start_time: float,
-        duration: float,
-        resource: str,
-        name: str,
-        job_type: JobTypes = JobTypes.PROCESS,
+            self,
+            start_time: float,
+            duration: float,
+            resource: str,
+            name: str,
+            job_type: JobTypes = JobTypes.PROCESS,
     ) -> None:
         """
         Constructs all the necessary attributes for the GanttJob object.
@@ -114,13 +114,14 @@ class GanttPlotter:
     __init__(self, resources: Optional[List[str]] = None, jobs: Optional[List[GanttJob]] = None, xticks_step_size: Optional[int] = None, xticks_max_value: Optional[int] = None)
         Initializes the GanttPlotter instance with the given parameters.
     """
+    VERSION = 0.3
 
     def __init__(
-        self,
-        resources: Optional[List[str]] = None,
-        jobs: Optional[List[GanttJob]] = None,
-        xticks_step_size: Optional[int] = None,
-        xticks_max_value: Optional[int] = None,
+            self,
+            resources: Optional[List[str]] = None,
+            jobs: Optional[List[GanttJob]] = None,
+            xticks_step_size: Optional[int] = None,
+            xticks_max_value: Optional[int] = None,
     ) -> None:
         """
         Constructs all the necessary attributes for the GanttPlotter object.
@@ -176,7 +177,7 @@ class GanttPlotter:
         self._jobs.append(job)
 
     def _find_xticks(
-        self, step_size: int, max_value: int
+            self, step_size: int, max_value: int
     ) -> Tuple[List[int], List[str]]:
         """
         Private method to find x-ticks and their corresponding labels for the Gantt chart.
@@ -291,7 +292,7 @@ class GanttPlotter:
         """
 
         num_colors = self._calc_num_colors_needed()
-        golden_ratio = (1 + 5**0.5) / 2
+        golden_ratio = (1 + 5 ** 0.5) / 2
 
         colors = [
             hsv_to_rgb(
@@ -456,11 +457,11 @@ class GanttPlotter:
                 self._add_labels_to_bars(gnt, job_list, broken_bars, lower_yaxis)
 
     def _add_labels_to_bars(
-        self,
-        gnt: Any,
-        job_list: List[GanttJob],
-        broken_bars: List[Tuple],
-        lower_yaxis: float,
+            self,
+            gnt: Any,
+            job_list: List[GanttJob],
+            broken_bars: List[Tuple],
+            lower_yaxis: float,
     ) -> None:
         """
         Private method to add labels to the bars in the Gantt chart.
@@ -483,7 +484,7 @@ class GanttPlotter:
         for i, bar in enumerate(broken_bars):
             x = bar[0] + (bar[1] / 2)  # calculate the x position of the label
             y = (
-                lower_yaxis + self._barheight / 2
+                    lower_yaxis + self._barheight / 2
             )  # calculate the y position of the label
             if types[i] == JobTypes.PROCESS:
                 gnt.text(
@@ -523,15 +524,15 @@ class GanttPlotter:
             )
 
     def generate_gantt(
-        self,
-        title: str = "",
-        description: str = "",
-        xlabel: str = "t [s]",
-        ylabel: str = "Resources",
-        label_processes: bool = False,
-        color_mode: int = 0,
-        save_to_disk: bool = False,
-        filename: str = "",
+            self,
+            title: str = "",
+            description: str = "",
+            xlabel: str = "t [s]",
+            ylabel: str = "Resources",
+            label_processes: bool = False,
+            color_mode: int = 0,
+            save_to_disk: bool = False,
+            filename: str = "",
     ) -> Figure:
         """
         Generates a Gantt chart from the jobs and resources data provided.
@@ -654,7 +655,7 @@ class GanttPlotter:
                 new_color = colors[color_index]
                 color_index = color_index + 1
             elif (
-                mode == 1
+                    mode == 1
             ):  # Unique color for each processing job, less saturated color for changeovers
                 if job.job_type == JobTypes.CHANGEOVER:
                     new_color = changeover_color
@@ -664,7 +665,7 @@ class GanttPlotter:
                     new_color = colors[color_index]
                     color_index = color_index + 1
             elif (
-                mode == 2
+                    mode == 2
             ):  # All processing times have the same color, all changeovers have the same color
                 if job.job_type == JobTypes.CHANGEOVER:
                     new_color = changeover_color
@@ -673,7 +674,7 @@ class GanttPlotter:
 
             # Warn if a value in the dictionary is being overwritten
             if job.name in self._job_color_dict and not np.array_equal(
-                self._job_color_dict[job.name], new_color
+                    self._job_color_dict[job.name], new_color
             ):
                 warnings.warn(
                     f"Overwriting color for job {job.name} in the color dictionary"
@@ -681,6 +682,110 @@ class GanttPlotter:
 
             self._job_color_dict[job.name] = new_color
 
+    def to_json(self):
+        """
+        Export the schedule information as a JSON-formatted string.
+
+        Returns
+        -------
+        str
+            The JSON-formatted string representing the schedule information.
+        """
+        # Create a dictionary with the schedule data
+        schedule_dict = {
+            "metadata": {
+                "creation_date": datetime.now().isoformat(),
+                "gantt_plotter_version": self.VERSION,
+            },
+            "attributes": {
+                "_y_tick_distance": self._y_tick_distance,
+                "_barheight": self._barheight,
+                "_job_color_dict": {key: value.tolist() for key, value in self._job_color_dict.items()},
+                "xticks_step_size": self.xticks_step_size,
+                "xticks_max_value": self.xticks_max_value
+            },
+            "resources": self._resources,
+            "jobs": [
+                {
+                    "start_time": job.start_time,
+                    "duration": job.duration,
+                    "resource": job.resource,
+                    "name": job.name,
+                    "job_type": job.job_type.value if job.job_type else None
+                } for job in self._jobs
+            ]
+        }
+
+        # Convert the dictionary to a JSON-formatted string
+        return json.dumps(schedule_dict, indent=4)
+
+    def save_to_json(self, filename):
+        """
+        Save the schedule information to a JSON file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file to write the JSON data to.
+
+        Returns
+        -------
+        None
+        """
+        # Generate the JSON string using to_json method
+        json_str = self.to_json()
+
+        # Write the JSON string to the file
+        with open(filename, 'w') as f:
+            f.write(json_str)
+
+    @classmethod
+    def from_json(cls, json_str):
+        """
+        Reconstruct a GanttPlotter instance from a JSON-formatted string and regenerate the Gantt chart.
+
+        Parameters
+        ----------
+        json_str : str
+            The JSON-formatted string containing the schedule information.
+
+        Returns
+        -------
+        GanttPlotter
+            The reconstructed GanttPlotter instance.
+        """
+        # Convert the JSON string back to a dictionary
+        schedule_dict = json.loads(json_str)
+
+        # Extract the job and resource data
+        resources = schedule_dict["resources"]
+        jobs_data = schedule_dict["jobs"]
+
+        # Reconstruct the job instances
+        jobs = [
+            GanttJob(
+                start_time=job_data["start_time"],
+                duration=job_data["duration"],
+                resource=job_data["resource"],
+                name=job_data["name"],
+                job_type=JobTypes(job_data["job_type"]) if job_data["job_type"] else None
+            ) for job_data in jobs_data
+        ]
+
+        # Reconstruct the GanttPlotter instance
+        plotter = cls(
+            resources=resources,
+            jobs=jobs,
+            xticks_step_size=schedule_dict["attributes"]["xticks_step_size"],
+            xticks_max_value=schedule_dict["attributes"]["xticks_max_value"]
+        )
+
+        # Restore the additional attributes
+        plotter._y_tick_distance = schedule_dict["attributes"]["_y_tick_distance"]
+        plotter._barheight = schedule_dict["attributes"]["_barheight"]
+        plotter._job_color_dict = {key: np.array(value) for key, value in schedule_dict["attributes"]["_job_color_dict"].items()}
+
+        return plotter
 
 if __name__ == "__main__":
     # Define the resources
@@ -730,3 +835,17 @@ if __name__ == "__main__":
         filename="MyExampleGanttChart.png",
     )
     my_plotter.show_gantt()
+
+    # Exporting and importing using JSON
+    json_dump = my_plotter.to_json()
+    second_plotter = GanttPlotter.from_json(json_dump)
+
+    second_plotter.generate_gantt(
+        title="Great Gantt 2",
+        ylabel="Machines",
+        label_processes=True,
+        color_mode=2,
+        description="Just an example 2",
+        save_to_disk=False,
+    )
+    second_plotter.show_gantt()
