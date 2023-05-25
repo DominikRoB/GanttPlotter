@@ -578,6 +578,8 @@ class GanttPlotter:
         # plt.legend(handles=legend_elements, bbox_to_anchor=(1, 1), loc="upper right", ncol=len(legend_elements), fontsize=9)
 
         self._add_description(gnt, description)
+        self._add_footnote(gnt)
+
         fig.tight_layout()
 
         if save_to_disk:
@@ -723,6 +725,7 @@ if __name__ == "__main__":
         ylabel="",
         label_processes=True,
         color_mode=2,
+        description="Just an example",
         save_to_disk=True,
         filename="MyExampleGanttChart.png",
     )
