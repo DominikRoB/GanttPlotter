@@ -353,7 +353,7 @@ class GanttPlotter:
             filename = f"{dt_string}--Gantt-{title.replace(' ', '_')}.png"
 
         file_directory = os.path.dirname(filename)
-        if file_directory != '':
+        if file_directory != "":
             os.makedirs(file_directory, exist_ok=True)
         figure = plt.gcf()
         figure.set_size_inches([6.4, 4.8])
