@@ -4,6 +4,7 @@
 # version         :0.2
 
 import math
+import numpy as np
 import os
 from collections import defaultdict
 from datetime import datetime, date
@@ -14,6 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
 from matplotlib.patches import Patch
 from matplotlib.figure import Figure
+import warnings
 
 
 class JobTypes(Enum):
@@ -567,22 +569,76 @@ class GanttPlotter:
         return self._job_color_dict[job_name]
 
     def _generate_color_dict(self, mode: int = 0):
-        """mode 0: Unique generated color for each job name
-        mode 1: Unique color for each processing job, less saturated color for changeovers
-        mode 2: All processing times have the same color, all changeovers have the same color
+        """
+        Generate a dictionary mapping job names to their corresponding colors.
+        The color generation mode is controlled by the `mode` parameter.
+
+        Parameters
+        ----------
+        mode : int, optional
+            Mode of color generation. The default is 0.
+            - Mode 0: Each unique job name gets a distinct color.
+            - Mode 1: Each unique processing job gets a distinct color, while changeovers have less saturated color.
+            - Mode 2: All processing jobs have the same color, while all changeovers have the same color.
+
+        Returns
+        -------
+        None.
+
+        Raises
+        ------
+        Warning
+            If a value in the color dictionary is being overwritten, a warning is raised notifying of the job name.
+
+        Notes
+        -----
+        The colors are stored in the `_job_color_dict` attribute of the instance.
         """
 
+        # Initialize colors
         colors = self._generate_colors()
 
-        unique_job_names = set([job.name for job in self._jobs])
-        for count, job in enumerate(unique_job_names):
-            if mode == 0 or mode == 1:
-                self._job_color_dict[job] = colors[count]
-            elif mode == 2:
-                self._job_color_dict[job] = hsv_to_rgb([44 / 360, 0.70, 0.9])
+        # Define color constants
+        processing_color = hsv_to_rgb([44 / 360, 0.70, 0.9])
+        changeover_color = hsv_to_rgb([180, 0.1, 1])
 
-            if job == "CHANGEOVER" and (mode == 1 or mode == 2):
-                self._job_color_dict[job] = hsv_to_rgb([180, 0.1, 1])
+        # Create a color dictionary based on mode
+        color_index = 0
+        for count, job in enumerate(self._jobs):
+            new_color = None
+
+            if mode == 0:  # Unique color for each job name
+                if job.name in self._job_color_dict:
+                    continue
+                new_color = colors[color_index]
+                color_index = color_index + 1
+            elif (
+                mode == 1
+            ):  # Unique color for each processing job, less saturated color for changeovers
+                if job.job_type == JobTypes.CHANGEOVER:
+                    new_color = changeover_color
+                else:
+                    if job.name in self._job_color_dict:
+                        continue  # Skip if color is already assigned to this job name for a processing job
+                    new_color = colors[color_index]
+                    color_index = color_index + 1
+            elif (
+                mode == 2
+            ):  # All processing times have the same color, all changeovers have the same color
+                if job.job_type == JobTypes.CHANGEOVER:
+                    new_color = changeover_color
+                else:
+                    new_color = processing_color
+
+            # Warn if a value in the dictionary is being overwritten
+            if job.name in self._job_color_dict and not np.array_equal(
+                self._job_color_dict[job.name], new_color
+            ):
+                warnings.warn(
+                    f"Overwriting color for job {job.name} in the color dictionary"
+                )
+
+            self._job_color_dict[job.name] = new_color
 
 
 if __name__ == "__main__":
