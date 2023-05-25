@@ -29,7 +29,7 @@ class GanttJob:
 
 
 class GanttPlotter:
-    def __init__(self, resources: List = None, jobs: List[GanttJob] = None):
+    def __init__(self, resources: List = None, jobs: List[GanttJob] = None, xticks_step_size=None, xticks_max_value=None):
         if resources is None:
             resources = []
         if jobs is None:
@@ -39,6 +39,8 @@ class GanttPlotter:
         self._jobs = jobs
         self._resources = resources
         self._job_color_dict = {}
+        self.xticks_step_size = xticks_step_size
+        self.xticks_max_value = xticks_max_value
 
     def show_gantt(self):
         plt.show()
@@ -48,6 +50,24 @@ class GanttPlotter:
 
     def add_job(self, job):
         self._jobs.append(job)
+
+
+    def _find_xticks(self, step_size, max_value):
+        xticklabels = []
+        xticks = []
+
+        number_full_ticks = max_value // step_size + 1  # Including Zero
+
+        for ii in range(number_full_ticks):
+            value = ii*step_size
+            xticklabels.append(str(value))
+            xticks.append(value)
+
+        xticklabels.append(str(max_value))
+        xticks.append(max_value)
+
+        return xticks, xticklabels
+
 
     def _find_yticks(self):
         origin_offset = 5
@@ -74,6 +94,9 @@ class GanttPlotter:
         return ymaxlim
 
     def _find_xmaxlim(self):
+        if self.xticks_max_value:
+            return self.xticks_max_value
+
         last_endtime = 0
         for job in self._jobs:
             end_time = job.start_time + job.duration
@@ -113,7 +136,7 @@ class GanttPlotter:
                        save_to_disk: bool = False,
                        filename: str = ""):
         fig, gnt = plt.subplots()
-        yticks, yticklabels = self._find_yticks()
+
 
         gnt.set_title(title)
 
@@ -126,6 +149,13 @@ class GanttPlotter:
         gnt.set_xlabel(xlabel)
         gnt.set_ylabel(ylabel)
 
+        if self.xticks_step_size:
+            xticks, xticklabels = self._find_xticks(self.xticks_step_size, x_maxlim)
+            gnt.set_xticks(xticks)
+            gnt.set_xticklabels(xticklabels)
+
+
+        yticks, yticklabels = self._find_yticks()
         gnt.set_yticks(yticks)
         gnt.set_yticklabels(yticklabels)
 
@@ -336,7 +366,7 @@ if __name__ == "__main__":
     task6 = GanttJob(130, 20, "Unit 3", "Job3")
     task_list = [task1, task2, task3, task4, task5, task6]
 
-    my_plotter = GanttPlotter(resources=resources, jobs=task_list)
+    my_plotter = GanttPlotter(resources=resources, jobs=task_list, xticks_step_size=8, xticks_max_value=160)
 
     new_resource = "Unit 4"
     new_task = GanttJob(70, 15, "Unit 4", "Job4")
