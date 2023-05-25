@@ -136,7 +136,7 @@ class GanttPlotter:
         """
 
         self._y_tick_distance = 10
-        self._barheight = 9
+        self._barheight = 10
         self._jobs = jobs if jobs is not None else []
         self._resources = resources if resources is not None else []
         self._job_color_dict = {}
@@ -291,7 +291,7 @@ class GanttPlotter:
                 new_element = Patch(
                     facecolor=element_color,
                     edgecolor="black",
-                    linewidth=0.5,
+                    linewidth=0.7,
                     label=element_label,
                 )
                 legend_elements.append(new_element)
@@ -308,7 +308,7 @@ class GanttPlotter:
                 new_element = Patch(
                     facecolor=element_color,
                     edgecolor="black",
-                    linewidth=0.5,
+                    linewidth=0.7,
                     label=element_label,
                 )
                 legend_elements.append(new_element)
@@ -351,9 +351,12 @@ class GanttPlotter:
             now = datetime.now()
             dt_string = now.strftime("%Y-%m-%d--%H-%M-%S")
             filename = f"{dt_string}--Gantt-{title.replace(' ', '_')}.png"
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+        file_directory = os.path.dirname(filename)
+        if file_directory != '':
+            os.makedirs(file_directory, exist_ok=True)
         figure = plt.gcf()
-        figure.set_size_inches(16, 9)
+        figure.set_size_inches([6.4, 4.8])
         plt.savefig(filename, dpi=400)
 
     def _setup_axis_ticks(self, gnt: Any) -> None:
