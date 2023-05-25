@@ -583,35 +583,49 @@ class GanttPlotter:
 
 
 if __name__ == "__main__":
+    # Define the resources
     resources = ["Unit 1", "Unit 2", "Unit 3"]
-    start_time = 40
-    duration = 50
-    resource = "Unit 1"
-    job_name = "Job1"
-    task1 = GanttJob(start_time, duration, resource, job_name)
 
-    task2 = GanttJob(110, 10, "Unit 2", "Job2")
-    task3 = GanttJob(150, 10, "Unit 2", "Job1")
+    # Define jobs for each resource
+    # Resource: "Unit 1"
+    task1 = GanttJob(start_time=40, duration=50, resource="Unit 1", name="Job1")
 
-    task4 = GanttJob(10, 50, "Unit 3", "Job3")
-    task5 = GanttJob(110, 30, "Unit 3", "CHANGEOVER", JobTypes.CHANGEOVER)
-    task6 = GanttJob(130, 20, "Unit 3", "Job3")
+    # Resource: "Unit 2"
+    task2 = GanttJob(start_time=110, duration=10, resource="Unit 2", name="Job2")
+    task3 = GanttJob(start_time=150, duration=10, resource="Unit 2", name="Job1")
+
+    # Resource: "Unit 3"
+    task4 = GanttJob(start_time=10, duration=50, resource="Unit 3", name="Job3")
+    task5 = GanttJob(
+        start_time=110,
+        duration=30,
+        resource="Unit 3",
+        name="CHANGEOVER",
+        job_type=JobTypes.CHANGEOVER,
+    )
+    task6 = GanttJob(start_time=130, duration=20, resource="Unit 3", name="Job3")
+
+    # Compile all the jobs in a list
     task_list = [task1, task2, task3, task4, task5, task6]
 
+    # Create a GanttPlotter instance with the resources and jobs
     my_plotter = GanttPlotter(
         resources=resources, jobs=task_list, xticks_step_size=8, xticks_max_value=160
     )
 
+    # Add a new resource "Unit 4" and a job for it
     new_resource = "Unit 4"
-    new_task = GanttJob(70, 15, "Unit 4", "Job4")
-
+    new_task = GanttJob(start_time=70, duration=15, resource=new_resource, name="Job4")
     my_plotter.add_resource(new_resource)
     my_plotter.add_job(new_task)
 
-    script = os.path.basename(__file__)
-    filename = "MyExampleGanttChart.png"
-
+    # Generate and show the Gantt chart
     my_plotter.generate_gantt(
-        "Great Gantt", ylabel="", label_processes=True, color_mode=2
+        title="Great Gantt",
+        ylabel="",
+        label_processes=True,
+        color_mode=2,
+        save_to_disk=True,
+        filename="MyExampleGanttChart.png",
     )
     my_plotter.show_gantt()
