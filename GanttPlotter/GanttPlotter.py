@@ -18,6 +18,11 @@ from matplotlib.figure import Figure
 import warnings
 
 
+def format_float(n, decimals):
+    str_format = f"{{:.{decimals}f}}"
+    return str_format.format(n).rstrip('0').rstrip('.')
+
+
 class JobTypes(Enum):
     """
     An Enum representing different types of jobs in a Gantt chart.
@@ -50,6 +55,11 @@ class GanttJob:
         The name of the job.
     job_type : JobTypes
         The type of the job, defaults to JobTypes.PROCESS.
+    label : str
+        The label which should be shown on the Gantt, defaults to NAME.
+        - DURATION shows the duration as label
+        - NAME shows the name as label
+        - None shows no label
 
     Methods
     -------
@@ -64,6 +74,7 @@ class GanttJob:
             resource: str,
             name: str,
             job_type: JobTypes = JobTypes.PROCESS,
+            label: str = "NAME"
     ) -> None:
         """
         Constructs all the necessary attributes for the GanttJob object.
@@ -80,12 +91,18 @@ class GanttJob:
             The name of the job.
         job_type : JobTypes, optional
             The type of the job, by default JobTypes.PROCESS.
+        label : str
+            The label which should be shown on the Gantt, defaults to NAME.
+            - DURATION shows the duration as label
+            - NAME shows the name as label
+            - None shows no label
         """
         self.start_time = start_time
         self.duration = duration
         self.resource = resource
         self.name = name
         self.job_type = job_type
+        self.label = label
 
 
 class GanttPlotter:
@@ -478,26 +495,39 @@ class GanttPlotter:
             Lower limit of the y-axis.
         """
 
-        labels = [job.name for job in job_list]
-        types = [job.job_type for job in job_list]
+        labels = []
+        rotations = []
+        fontweights = []
+        for job in job_list:
+            if not job.label:
+                labels.append("")
+                rotations.append(0)
+                fontweights.append("normal")
+            elif job.label.upper() == "DURATION":
+                labels.append(format_float(job.duration, 2))
+                rotations.append(0)
+                fontweights.append("normal")
+            elif job.label.upper() == "NAME":
+                labels.append(job.name)
+                rotations.append(45)
+                fontweights.append("bold")
 
         for i, bar in enumerate(broken_bars):
             x = bar[0] + (bar[1] / 2)  # calculate the x position of the label
             y = (
                     lower_yaxis + self._barheight / 2
             )  # calculate the y position of the label
-            if types[i] == JobTypes.PROCESS:
-                gnt.text(
-                    x,
-                    y,
-                    labels[i],
-                    rotation=45,
-                    ha="center",
-                    va="center",
-                    fontsize=9,
-                    fontweight="bold",
-                    color="black",
-                )
+            gnt.text(
+                x,
+                y,
+                labels[i],
+                rotation=rotations[i],
+                ha="center",
+                va="center",
+                fontsize=9,
+                fontweight=fontweights[i],
+                color="black",
+            )
 
     def _add_description(self, gnt: Any, description: str) -> None:
         """
@@ -711,7 +741,8 @@ class GanttPlotter:
                     "duration": job.duration,
                     "resource": job.resource,
                     "name": job.name,
-                    "job_type": job.job_type.value if job.job_type else None
+                    "job_type": job.job_type.value if job.job_type else None,
+                    "label": job.label,
                 } for job in self._jobs
             ]
         }
@@ -768,7 +799,8 @@ class GanttPlotter:
                 duration=job_data["duration"],
                 resource=job_data["resource"],
                 name=job_data["name"],
-                job_type=JobTypes(job_data["job_type"]) if job_data["job_type"] else None
+                job_type=JobTypes(job_data["job_type"]) if job_data["job_type"] else None,
+                label=job_data["label"],
             ) for job_data in jobs_data
         ]
 
@@ -793,20 +825,21 @@ if __name__ == "__main__":
 
     # Define jobs for each resource
     # Resource: "Unit 1"
-    task1 = GanttJob(start_time=40, duration=50, resource="Unit 1", name="Job1")
+    task1 = GanttJob(start_time=40, duration=50, resource="Unit 1", name="Job1", label=None)
 
     # Resource: "Unit 2"
     task2 = GanttJob(start_time=110, duration=10, resource="Unit 2", name="Job2")
     task3 = GanttJob(start_time=150, duration=10, resource="Unit 2", name="Job1")
 
     # Resource: "Unit 3"
-    task4 = GanttJob(start_time=10, duration=50, resource="Unit 3", name="Job3")
+    task4 = GanttJob(start_time=10, duration=50, resource="Unit 3", name="Job3", label="name")
     task5 = GanttJob(
-        start_time=110,
+        start_time=100,
         duration=30,
         resource="Unit 3",
         name="CHANGEOVER",
         job_type=JobTypes.CHANGEOVER,
+        label="duration",
     )
     task6 = GanttJob(start_time=130, duration=20, resource="Unit 3", name="Job3")
 
